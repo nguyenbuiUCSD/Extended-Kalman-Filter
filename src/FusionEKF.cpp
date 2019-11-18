@@ -4,6 +4,9 @@
 #include "Eigen/Dense"
 #include "tools.h"
 
+#define NOISE_AX 100
+#define NOISE_AY 100
+
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -83,17 +86,17 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     * Q_ : Process covariance
     */
     ekf_.P_ << 1, 0, 0, 0,
-              0, 1, 0, 0,
-              0, 0, 1000, 0,
-              0, 0, 0, 1000;
+               0, 1, 0, 0,
+               0, 0, 1000, 0,
+               0, 0, 0, 1000;
     ekf_.F_ << 1, 0, 1, 0,
-              0, 1, 0, 1,
-              0, 0, 1, 0,
-              0, 0, 0, 1;
+               0, 1, 0, 1,
+               0, 0, 1, 0,
+               0, 0, 0, 1;
     ekf_.Q_ << 0, 0, 0, 0,
-              0, 0, 0, 0,
-              0, 0, 0, 0,
-              0, 0, 0, 0;
+               0, 0, 0, 0,
+               0, 0, 0, 0,
+               0, 0, 0, 0;
 
     // Init x_, H_, R_
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
@@ -136,6 +139,25 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    * TODO: Update the process noise covariance matrix.
    * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+  
+  // Calculate dt in second and save current timestamp
+  float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
+  previous_timestamp_ = measurement_pack.timestamp_;
+
+  // Precalculation
+  float dt_p2 = dt * dt;
+  float dt_p3 = dt_p2 * dt;
+  float dt_p4 = dt_p3 * dt;
+    
+  // Update Transition matrix
+  ekf_.F_(0, 2) = dt;
+  ekf_.F_(1, 3) = dt;
+
+  // Calculate process covariance matrix Q
+  ekf_.Q_ <<  dt_p4/4*NOISE_AX, 0, dt_p3/2*NOISE_AX, 0,
+              0, dt_p4/4*NOISE_AY, 0, dt_p3/2*NOISE_AY,
+              dt_p3/2*NOISE_AX, 0, dt_p2*NOISE_AX, 0,
+              0, dt_p3/2*NOISE_AY, 0, dt_p2*NOISE_AY;
 
   ekf_.Predict();
 
@@ -154,6 +176,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     cout << "Skipping Ladar" << endl;
   } else {
     // TODO: Laser updates
+
+    
+    
     ekf_.Update(measurement_pack.raw_measurements_);
   }
 
