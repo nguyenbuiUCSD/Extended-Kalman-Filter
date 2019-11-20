@@ -102,7 +102,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // TODO: Convert radar from polar to cartesian coordinates 
       //         and initialize state.
-      cout << "Skipping Ladar" << endl;
+            // init ekf.x_
+      ekf_.x_ << measurement_pack.raw_measurements_[0]*cos(measurement_pack.raw_measurements_[1]), 
+                 measurement_pack.raw_measurements_[0]*sin(measurement_pack.raw_measurements_[1]), 
+                 0, 
+                 0;
       
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
@@ -113,12 +117,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
                  measurement_pack.raw_measurements_[1], 
                  0, 
                  0;
-      
-      // init ekf.H_
-      ekf_.H_ = H_laser_;
-
-      // init ekf.R_
-      ekf_.R_ =  R_laser_;
     }
 
     // done initializing, no need to predict or update
@@ -173,12 +171,25 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // TODO: Radar updates
-    cout << "Skipping Ladar" << endl;
+    
+    // Precalculation for H_radar_j
+    Hj_ = tools.CalculateJacobian(ekf_.x_);
+    
+    // Change ekf before update
+    ekf_.H_ = Hj_;
+    ekf_.R_ =  R_radar_;
+    
+    // Update with Laser data
+    ekf_.Update(measurement_pack.raw_measurements_);
   } else {
     // TODO: Laser updates
 
     
+    // Change ekf before update
+    ekf_.H_ = H_laser_;
+    ekf_.R_ =  R_laser_;
     
+    // Update with Laser data
     ekf_.Update(measurement_pack.raw_measurements_);
   }
 
