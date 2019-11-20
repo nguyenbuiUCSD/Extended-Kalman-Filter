@@ -30,10 +30,10 @@ FusionEKF::FusionEKF() {
 
 
   /**
-   * TODO: Finish initializing the FusionEKF.
-   * TODO: Set the process and measurement noises
+   * Initializing Extended Kalman Filter Matrices
+   * x_, F_, P_, Q_ : fixed size
+   * H_, R_ : dynamic size, depend on sensor type
    */
-  
   ekf_.x_ = VectorXd(4);
   ekf_.F_ = MatrixXd(4, 4);
   ekf_.P_ = MatrixXd(4, 4);
