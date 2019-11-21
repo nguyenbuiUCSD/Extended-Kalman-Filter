@@ -1,8 +1,11 @@
 #include "kalman_filter.h"
 #include <math.h>
+#include <iostream>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
+using std::cout;
+using std::endl;
 
 /* 
  * Please note that the Eigen library does not initialize 
@@ -57,16 +60,25 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
    */
   
   // Sanity check
-  float c1 = z[0]*z[0]+z[1]*z[1];
-  if ((fabs(c1) < 0.0001) || (z[0]<0.001)){
+  float c1 = x_[0]*x_[0]+x_[1]*x_[1];
+  if (c1 < 0.000001){
     return;
   }
-    
+
   // Calculate E Kalman Filter Gain K
   VectorXd z_predict(3);
   // Precalculations
   float rho = sqrt(c1);
-  float phi = atan(z[1]/z[0]);
+  float phi;
+  if (x_[0] == 0){
+    if (x_[1] > 0){
+      phi = M_PI/2;
+    } else {
+      phi = -M_PI/2;
+    }
+  } else {
+    phi = atan2(x_[1],x_[0]);
+  }
   // Normalize phi
   while (phi>M_PI){
     phi -= M_PI;
@@ -74,11 +86,13 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   while (phi<=-M_PI){
     phi += M_PI;
   }
-    
-  float rho_dot = (z[0]*z[2]+z[1]*z[3])/rho;
+  
+  float rho_dot = (x_[0]*x_[2]+x_[1]*x_[3])/rho;
+  
   z_predict << rho,
                phi,
                rho_dot;
+  cout << "z_predict: " << z_predict << endl;
   VectorXd y = z-z_predict;
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_*P_*Ht+R_;
