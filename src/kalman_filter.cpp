@@ -92,7 +92,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   z_predict << rho,
                phi,
                rho_dot;
-  cout << "z_predict: " << z_predict << endl;
+  cout << "z_predict: " << z_predict << endl << "x: " << x_ << endl;
   VectorXd y = z-z_predict;
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_*P_*Ht+R_;
