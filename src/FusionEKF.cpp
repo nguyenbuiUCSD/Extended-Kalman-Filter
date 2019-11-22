@@ -4,8 +4,8 @@
 #include "Eigen/Dense"
 #include "tools.h"
 
-#define NOISE_AX 100
-#define NOISE_AY 100
+#define NOISE_AX 9
+#define NOISE_AY 9
 
 
 using Eigen::MatrixXd;

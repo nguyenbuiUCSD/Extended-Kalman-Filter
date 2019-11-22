@@ -67,6 +67,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   // Calculate E Kalman Filter Gain K
   VectorXd z_predict(3);
+  
   // Precalculations
   float rho = sqrt(c1);
   float phi;
@@ -79,21 +80,23 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   } else {
     phi = atan2(x_[1],x_[0]);
   }
-  // Normalize phi
-  while (phi>M_PI){
-    phi -= M_PI;
-  }
-  while (phi<=-M_PI){
-    phi += M_PI;
-  }
-  
+
   float rho_dot = (x_[0]*x_[2]+x_[1]*x_[3])/rho;
   
   z_predict << rho,
                phi,
                rho_dot;
-  cout << "z_predict: " << z_predict << endl << "x: " << x_ << endl;
+  
   VectorXd y = z-z_predict;
+  // Normalize the phi error
+  // Error phi has to be <= M_PI and > -M_PI
+  while (y[1]>M_PI){
+    y[1] -= 2*M_PI;
+  }
+  while (y[1]<=-M_PI){
+    y[1] += 2*M_PI;
+  }
+  
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_*P_*Ht+R_;
   MatrixXd Si = S.inverse();
