@@ -12,6 +12,9 @@ KalmanFilter::KalmanFilter() {}
 
 KalmanFilter::~KalmanFilter() {}
 
+/* name: Init()
+ * usage: Set Kalman Filter Parametters
+ */
 void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
                         MatrixXd &H_in, MatrixXd &R_in, MatrixXd &Q_in) {
   x_ = x_in;
@@ -22,6 +25,9 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
   Q_ = Q_in;
 }
 
+/* name: Predict()
+ * usage: Predict next state after a time dt
+ */
 void KalmanFilter::Predict() {
 
   x_ = F_*x_;
@@ -29,6 +35,9 @@ void KalmanFilter::Predict() {
   P_=F_*P_*Ft+Q_;
 }
 
+/* name: Update()
+ * usage: Update current state with observation from laser sensor data
+ */
 void KalmanFilter::Update(const VectorXd &z) {
 
   // Calculate Kalman Filter Gain K
@@ -45,6 +54,9 @@ void KalmanFilter::Update(const VectorXd &z) {
   P_ = (I-K*H_)*P_;
 }
 
+/* name: UpdateEKF()
+ * usage: Update current state with observation from radar sensor data
+ */
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   // Sanity check
@@ -58,19 +70,10 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   
   // Precalculations
   float rho = sqrt(c1);
-  float phi;
-  if (x_[0] == 0){
-    if (x_[1] > 0){
-      phi = M_PI/2;
-    } else {
-      phi = -M_PI/2;
-    }
-  } else {
-    phi = atan2(x_[1],x_[0]);
-  }
-
+  float phi = atan2(x_[1],x_[0]);
   float rho_dot = (x_[0]*x_[2]+x_[1]*x_[3])/rho;
   
+  // Asign calculated data to vector
   z_predict << rho,
                phi,
                rho_dot;
@@ -85,6 +88,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     y[1] += 2*M_PI;
   }
   
+  // Kalman filter calculation
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_*P_*Ht+R_;
   MatrixXd Si = S.inverse();

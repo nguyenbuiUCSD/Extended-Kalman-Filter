@@ -68,9 +68,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     H_laser_ << 1, 0, 0, 0,
                 0, 1, 0, 0;
     
-    // TODO: Mesurement matrix - Radar
-    
-    
     /*
     * INITIALIZING EXTENDED KALMAN FILTER (FusionEKF.ekf_)
     * x_ : current state
@@ -120,6 +117,18 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     return;
   }
 
+  /*
+   * TEST:
+   * Use this to skip one data type
+   */
+  /*
+  if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
+    //return;
+  } else {
+    //return;
+  }
+  */
+  
   /**
    * Prediction
    */
@@ -146,21 +155,19 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   ekf_.Predict();
 
   /**
-   * Update
+   * UPDATE
    */
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-
-    // Precalculation for H_radar_j
+    // Precalculation for H_j
     Hj_ = tools.CalculateJacobian(ekf_.x_);
     // Change ekf before update
     ekf_.H_ = Hj_;
     ekf_.R_ =  R_radar_;
-    
     // Update with Laser data
     ekf_.UpdateEKF(measurement_pack.raw_measurements_);
+  
   } else {
-
     // Change ekf before update
     ekf_.H_ = H_laser_;
     ekf_.R_ =  R_laser_;

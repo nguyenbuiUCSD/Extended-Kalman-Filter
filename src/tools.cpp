@@ -9,31 +9,45 @@ Tools::Tools() {}
 
 Tools::~Tools() {}
 
+
+/* name: CalculateRMSE()
+ * usage: Calculate root mean square error of estimations vs groudtruth
+ */
 VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
                               const vector<VectorXd> &ground_truth) {
-    // Return 0 for now
+  // initialize return
   VectorXd rmse(4);
   rmse << 0,0,0,0;
   
+  // sanity check
   int n = estimations.size();
   if (n != ground_truth.size() || n == 0) {
     return rmse;
   }
   
+  // Calculate residual
   for (int i=0; i < n; ++i){
     VectorXd residual = estimations[i] - ground_truth[i];
     residual = residual.array()*residual.array();
     rmse += residual;
   }
+  
+  // Root mean square error
   rmse = rmse/n;
   rmse = rmse.array().sqrt();
   
+  // Return
   return rmse;
   
 }
 
+/*
+ * name: CalculateJacobian()
+ * usage: calculate Jacobian matrix at x_state for linearizing non linear fnc
+ */
 MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 
+  // Init
   MatrixXd Hj(3,4);
   // recover state parameters
   float px = x_state(0);
